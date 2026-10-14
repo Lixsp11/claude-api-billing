@@ -1,0 +1,139 @@
+[
+  {
+    "name": "rewrites cc_entrypoint and identity in the two leading system blocks",
+    "request": {
+      "model": "claude-opus-5-5",
+      "max_tokens": 128000,
+      "stream": true,
+      "system": [
+        { "type": "text", "text": "x-anthropic-billing-header: cc_version=2.1.299.fa6; cc_entrypoint=cli;" },
+        { "type": "text", "text": "You are Claude Code, Anthropic's official CLI for Claude." },
+        { "type": "text", "text": "You are an agent working with the user toward their goals." }
+      ],
+      "messages": [{ "role": "user", "content": "hi" }]
+    },
+    "expect_request": {
+      "model": "claude-opus-5-5",
+      "max_tokens": 128000,
+      "stream": true,
+      "system": [
+        { "type": "text", "text": "x-anthropic-billing-header: cc_version=2.1.299.fa6; cc_entrypoint=sdk-cli;" },
+        { "type": "text", "text": "You are a Claude agent, built on Anthropic's Claude Agent SDK." },
+        { "type": "text", "text": "You are an agent working with the user toward their goals." }
+      ],
+      "messages": [{ "role": "user", "content": "hi" }]
+    }
+  },
+  {
+    "name": "already sdk-cli and SDK identity pass through unchanged",
+    "request": {
+      "model": "claude-opus-5-5",
+      "system": [
+        { "type": "text", "text": "x-anthropic-billing-header: cc_version=2.1.299.fa6; cc_entrypoint=sdk-cli;" },
+        { "type": "text", "text": "You are a Claude agent, built on Anthropic's Claude Agent SDK." }
+      ],
+      "messages": [{ "role": "user", "content": "hi" }]
+    }
+  },
+  {
+    "name": "custom entrypoint is written instead",
+    "options": { "entrypoint": "cli" },
+    "request": {
+      "model": "claude-opus-5-5",
+      "system": [
+        { "type": "text", "text": "x-anthropic-billing-header: cc_version=2.1.299.fa6; cc_entrypoint=sdk-cli;" },
+        { "type": "text", "text": "You are a Claude agent, built on Anthropic's Claude Agent SDK." }
+      ],
+      "messages": [{ "role": "user", "content": "hi" }]
+    },
+    "expect_request": {
+      "model": "claude-opus-5-5",
+      "system": [
+        { "type": "text", "text": "x-anthropic-billing-header: cc_version=2.1.299.fa6; cc_entrypoint=cli;" },
+        { "type": "text", "text": "You are a Claude agent, built on Anthropic's Claude Agent SDK." }
+      ],
+      "messages": [{ "role": "user", "content": "hi" }]
+    }
+  },
+  {
+    "name": "custom identity replaces the CLI line",
+    "options": { "identity": "You are a custom agent." },
+    "request": {
+      "model": "claude-opus-5-5",
+      "system": [
+        { "type": "text", "text": "x-anthropic-billing-header: cc_version=2.1.299.fa6; cc_entrypoint=cli;" },
+        { "type": "text", "text": "You are Claude Code, Anthropic's official CLI for Claude." }
+      ],
+      "messages": [{ "role": "user", "content": "hi" }]
+    },
+    "expect_request": {
+      "model": "claude-opus-5-5",
+      "system": [
+        { "type": "text", "text": "x-anthropic-billing-header: cc_version=2.1.299.fa6; cc_entrypoint=sdk-cli;" },
+        { "type": "text", "text": "You are a custom agent." }
+      ],
+      "messages": [{ "role": "user", "content": "hi" }]
+    }
+  },
+  {
+    "name": "a first block without the billing marker is left alone",
+    "request": {
+      "model": "claude-opus-5-5",
+      "system": [
+        { "type": "text", "text": "Be helpful." },
+        { "type": "text", "text": "You are Claude Code, Anthropic's official CLI for Claude." }
+      ],
+      "messages": [{ "role": "user", "content": "hi" }]
+    },
+    "expect_request": {
+      "model": "claude-opus-5-5",
+      "system": [
+        { "type": "text", "text": "Be helpful." },
+        { "type": "text", "text": "You are a Claude agent, built on Anthropic's Claude Agent SDK." }
+      ],
+      "messages": [{ "role": "user", "content": "hi" }]
+    }
+  },
+  {
+    "name": "system as a string is left as it was",
+    "request": {
+      "model": "claude-opus-5-5",
+      "system": "You are Claude Code, Anthropic's official CLI for Claude.",
+      "messages": [{ "role": "user", "content": "hi" }]
+    }
+  },
+  {
+    "name": "no system field is left as it was",
+    "request": {
+      "model": "claude-opus-5-5",
+      "messages": [{ "role": "user", "content": "hi" }]
+    }
+  },
+  {
+    "name": "chat protocol without an Anthropic system array is untouched",
+    "ctx": { "protocol": "chat" },
+    "request": {
+      "model": "gpt-5",
+      "messages": [
+        { "role": "system", "content": "You are Claude Code" },
+        { "role": "user", "content": "hi" }
+      ]
+    }
+  },
+  {
+    "name": "probe turns a probe message into a 418",
+    "options": { "probe": true },
+    "request": {
+      "model": "claude-opus-5-5",
+      "messages": [{ "role": "user", "content": "PROBE_CLAUDE_API_BILLING" }]
+    },
+    "reject": { "status": 418, "message": "claude-api-billing middleware alive" }
+  },
+  {
+    "name": "probe off by default: a probe message passes through",
+    "request": {
+      "model": "claude-opus-5-5",
+      "messages": [{ "role": "user", "content": "PROBE_CLAUDE_API_BILLING" }]
+    }
+  }
+]
