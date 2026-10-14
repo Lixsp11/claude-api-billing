@@ -48,5 +48,3 @@ magpie plugin options claude-api-billing '<json>'
 
 - It is a magpie **gateway middleware**, not an OpenCode provider plugin. Configure a Claude provider in magpie with the platform API account, then attach this middleware to it.
 - Scope: for routing your own subscription accounts through your own gateway. One gateway, one user.
-
-中文：把 Claude Code 最前面的两个 `system` 块改写掉——计费头里的 `cc_entrypoint` 改成目标值，CLI 身份行换成 Agent SDK 身份行，其余一概不动。
